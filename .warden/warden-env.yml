@@ -1,0 +1,29 @@
+version: "3.5"
+services:
+  backend:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    working_dir: /app
+    volumes:
+      - ./:/app
+    command: >
+      bash -c "yarn start:browser-backend"
+#      bash -c "apt-get update && apt-get -y install rsync && yarn start:browser-backend"
+
+  frontend:
+    image: node:16-bullseye
+    working_dir: /app
+    volumes:
+      - ./:/app
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.${WARDEN_ENV_NAME}-frontend.tls=true
+      - traefik.http.routers.${WARDEN_ENV_NAME}-frontend.priority=4
+      - traefik.http.routers.${WARDEN_ENV_NAME}-frontend.rule=Host(`${TRAEFIK_DOMAIN}`)
+      - traefik.http.services.${WARDEN_ENV_NAME}-frontend.loadbalancer.server.port=3001
+    expose:
+      - 3001
+    command: >
+      bash -c "yarn install &&
+        yarn start:browser-frontend"
